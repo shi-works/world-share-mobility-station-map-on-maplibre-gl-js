@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>World Share Mobility Station Map（2023-12）</title>
+    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+    <script src='https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js'></script>
+    <link href='https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css' rel='stylesheet' />
+    <script src="https://unpkg.com/pmtiles@2.10.0/dist/index.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        #map {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="map"></div>
+    <script type="text/javascript">
+        // addProtocolの設定
+        let protocol = new pmtiles.Protocol();
+        maplibregl.addProtocol("pmtiles", protocol.tile);
+
+        // マップの初期化
+        var map = new maplibregl.Map({
+            container: 'map',
+            style: 'https://api.maptiler.com/maps/darkmatter/style.json?key=3vP7xaDm3gASNdwulEW1',
+            center: [139.7719, 35.6527],
+            zoom: 10,
+            pitch: 0,
+            maxPitch: 85,
+            hash: true,
+            attributionControl: false
+        })
+
+        // ズーム・回転
+        map.addControl(new maplibregl.NavigationControl());
+
+        // フルスクリーンモードのオンオフ
+        map.addControl(new maplibregl.FullscreenControl());
+
+        // 現在位置表示
+        map.addControl(new maplibregl.GeolocateControl({
+            positionOptions: {
+                enableHighAccuracy: false
+            },
+            fitBoundsOptions: { maxZoom: 18 },
+            trackUserLocation: true,
+            showUserLocation: true
+        }));
+
+        // スケール表示
+        map.addControl(new maplibregl.ScaleControl({
+            maxWidth: 200,
+            unit: 'metric'
+        }));
+
+        // Attributionを折りたたみ表示
+        map.addControl(new maplibregl.AttributionControl({
+            compact: true,
+            customAttribution: '（<a href="https://twitter.com/shi__works" target="_blank">Twitter</a> | <a href="" target="_blank">Github</a>） '
+        }));
+
+        map.on('load', () => {
+            // 国境GeoJSONソース
+            map.addSource("boundaries", {
+                type: "geojson",
+                data: './WB_countries_Admin0_10m.geojson',
+                attribution: '<a href="https://datacatalog.worldbank.org/search/dataset/0038272">World Bank Official Boundaries</a>'
+            });
+
+            // 国境GeoJSONライン
+            map.addLayer({
+                'id': 'boundaries-line',
+                'type': 'line',
+                'source': 'boundaries',
+                'paint': {
+                    'line-color': 'rgba(255, 255, 255, 1)',
+                    'line-width': 1,
+                    'line-opacity': 1
+                }
+            });
+
+            // stationsソース
+            map.addSource("pmtiles-stations", {
+                type: "vector",
+                url: "pmtiles://" + "https://xs489works.xsrv.jp/pmtiles-data//MobilityData/stations.pmtiles"
+            });
+
+            // stationsポイントレイヤ
+            map.addLayer({
+                id: 'stations-points-1',
+                type: 'circle',
+                source: 'pmtiles-stations',
+                "source-layer": 'stations',
+                minzoom: 0,
+                maxzoom: 23,
+                paint: {
+                    'circle-color': '#6ff77c',
+                    'circle-radius': 15,
+                    'circle-blur': 3,
+                    'circle-opacity': 0.8
+                }
+            });
+
+            // stationsポイントレイヤ
+            map.addLayer({
+                id: 'stations-points-2',
+                type: 'circle',
+                source: 'pmtiles-stations',
+                "source-layer": 'stations',
+                minzoom: 0,
+                maxzoom: 23,
+                paint: {
+                    'circle-color': '#00ff37',
+                    'circle-radius': 7.5,
+                    'circle-blur': 3,
+                    'circle-opacity': 0.8
+                }
+            });
+
+            // stationsポイントレイヤ
+            map.addLayer({
+                id: 'stations-points-3',
+                type: 'circle',
+                source: 'pmtiles-stations',
+                "source-layer": 'stations',
+                minzoom: 0,
+                maxzoom: 23,
+                paint: {
+                    'circle-color': '#ffffff',
+                    'circle-radius': 1.5,
+                    'circle-blur': 0,
+                    'circle-opacity': 1
+                }
+            });
+
+            // 都市GeoJSONソース
+            map.addSource('cities', {
+                'type': 'geojson',
+                'data': './ne_10m_populated_places.geojson',
+                attribution: '<a href="https://www.naturalearthdata.com/">Natural Earth</a>'
+            });
+
+            // 都市GeoJSONラベルレイヤ
+            map.addLayer({
+                'id': 'cities-labels',
+                'type': 'symbol',
+                'source': 'cities',
+                minzoom: 5,
+                maxzoom: 23,
+                'layout': {
+                    'text-field': ['get', 'NAME'],
+                    'text-font': ['Open Sans Bold', 'Arial Unicode MS Bold'],
+                    'text-size': 13,
+                    'text-anchor': 'center',
+                    'text-justify': 'center',
+                    'text-offset': [0, -1.0],
+                },
+                'paint': {
+                    'text-color': 'rgba(0, 0, 0, 1)',
+                    'text-halo-color': 'rgba(255, 255, 255, 1)',
+                    'text-halo-width': 1.5
+                }
+            });
+
+        });
+    </script>
+
+</body>
+
+</html>
